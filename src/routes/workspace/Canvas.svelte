@@ -4,45 +4,65 @@
 		return a + (b - a) * (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
 	};
 
-	const mouse: { x: number; y: number; z: boolean } = {
+	const mouse = {
 		x: 0,
 		y: 0,
-		z: false,
+        dx: 0,
+        dy: 0,
+		drag: false,
+        move: false,
 	};
 	let mainElement: HTMLElement;
 	let containerElement: HTMLElement;
 	let current_translate: Vector2 = { x: 0, y: 0 };
 	let target_translate: Vector2 = { x: 0, y: 0 };
-	const mouseDown = () => {
-		mouse.z = true;
-		mainElement.classList.add('drag');
+    let zoom_level = 1; // dont use this
+	const mouseDown = (e: MouseEvent) => {
+		if(e.target == mainElement || e.target == linkCanvas){
+            mouse.drag = true;
+            mouse.move = false;
+            selected_nodes = []
+        }
+        else {
+            mouse.move = true;
+            mainElement.classList.add('drag');
+        }
 	};
 	const mouseUp = () => {
-		mouse.z = false;
+		mouse.drag = false;
+        mouse.move = false;
 		if (typeof mainElement == 'undefined') return;
 		if (mainElement == null) return;
 		if (!mainElement.classList.contains('drag')) return;
-		mainElement.classList.remove('drag');
+		
+        mainElement.classList.remove('drag');
 	};
 	if (typeof window != 'undefined') {
 		window.addEventListener('mouseup', mouseUp);
 	}
-	let lastMousePosition: Vector2 = { x: 0, y: 0 };
 	const mouseMove = (e: MouseEvent) => {
 		let dragSpeed = 1.2;
 
 		let x = e.clientX * dragSpeed;
 		let y = e.clientY * dragSpeed;
 
-		if (mouse.z) {
-			let deltaX = x - lastMousePosition.x;
-			let deltaY = y - lastMousePosition.y;
-
+        let deltaX = x - mouse.x;
+        let deltaY = y - mouse.y;
+		
+        if (mouse.drag) {
 			target_translate.x += deltaX;
 			target_translate.y += deltaY;
 		}
+        if (mouse.move){
+            physical_fs.forEach(node => {   
+                if(selected_nodes.includes(node.id)) node.move({x: deltaX, y: deltaY});
+            });
+        }
 
-		lastMousePosition = { x: x, y: y };
+		mouse.dx = x - mouse.x;
+        mouse.dy = y - mouse.y;
+        mouse.x = x;
+        mouse.y = y;
 	};
 	if (typeof window != 'undefined') {
 		window.addEventListener('mousemove', mouseMove);
@@ -71,7 +91,7 @@
 		requestAnimationFrame(container_update);
 	};
 	if (typeof window != 'undefined') {
-		target_translate.x = (window.innerWidth - 400) / 2;
+		target_translate.x = (window.innerWidth - 400) / 4;
 		target_translate.y = window.innerHeight / 2;
         current_translate = target_translate;
 	}
@@ -152,18 +172,24 @@
 		id: number;
         htmlElement: HTMLElement|undefined;
         is_open: boolean;
-		constructor(name: string, position: Vector2, id: number) {
+        direction: number;
+        depth: number;
+        parent_id: number;
+		constructor(name: string, direction: number, position: Vector2, id: number, depth: number, parent_id: number) {
 			this.name = name;
             this.base_position = position;
-			//this.position = position;
-            this.position = { x: position.x + Math.random()*50 - 25, y: position.y + Math.random()*50 - 25};
 			this.id = id;
 			this.wobble_dir = Math.random()*Math.PI;
 			this.velocity = { x: 0, y: 0 };
             this.is_open = false;
+            this.direction = direction;
+            //this.position = { x: position.x + Math.random()*50 - 25, y: position.y + Math.random()*50 - 25};
+			this.position = position;
+            this.depth = depth;
+            this.parent_id = parent_id;
 		}
         update() {
-            let wobble_speed = 0.2;
+            let wobble_speed = 0.12;
             let attraction_strength = 0.01;
 
             this.position.x += this.velocity.x;
@@ -172,7 +198,7 @@
             this.position.y += Math.sin(this.wobble_dir) * wobble_speed;
 
             if (typeof this.htmlElement !== 'undefined') {
-                this.htmlElement.setAttribute('style', `top: ${this.position.y}px; left: ${this.position.x}px;`);
+                this.htmlElement.setAttribute('style', `top: ${this.position.y}px; left: ${this.position.x}px; scale: ${zoom_level};`);
             }
 
             let randomization = 0.5;
@@ -186,27 +212,43 @@
             this.velocity.x *= 0.9
             this.velocity.y *= 0.9
         }
-		click() {
-			if (selected_node == this.id) selected_node = -1;
-			else selected_node = this.id;
+		mouseDown(e: MouseEvent) {
+			if(e.shiftKey){
+                if(selected_nodes.includes(this.id)){
+                    selected_nodes = selected_nodes.filter(id => id != this.id);
+                }else{
+                    selected_nodes = [...selected_nodes, this.id];
+                }
+            } else {
+                selected_nodes = [this.id];
+            }
 		}
         async open(){
             const node: Node | 0 = fs.findChild(this.id);
 			if (typeof node == 'number') return 0;
-			selected_node = this.id;
+			selected_nodes = [];
             this.is_open = true;
 
 			await node.rquest_children();
 			const physical_chilren: Array<PhysicalNode> = node.children.map(
 				(child, index) => {
-					const child_position = { // todo change to radial distrebution
-						x: this.position.x + 350,
-						y: this.position.y + (index - 2) * 200,
+                    // evenly distrebute from the current direction in a 30deg
+                    let area = 60
+                    let spread = area / node.children.length
+                    let child_direction = this.direction + spread * (index + 0.5) - area/2
+                    if(node.children.length == 1) child_direction = this.direction
+					const child_position = {
+						x: this.position.x + Math.cos(child_direction * Math.PI / 180) * ((this.depth+2) * 2)**0.7 * 80,
+						y: this.position.y + Math.sin(child_direction * Math.PI / 180) * ((this.depth+2) * 2)**0.7 * 80,
 					};
+                    console.log(this.direction, child_direction, index)
 					return new PhysicalNode(
 						child.name,
+                        child_direction,
 						child_position,
 						child.id,
+                        this.depth + 1,
+                        this.id,
 					);
 				},
 			);
@@ -221,7 +263,7 @@
         close(){
             const node: Node | 0 = fs.findChild(this.id);
             if (typeof node == 'number') return 0;
-            if (selected_node == this.id) selected_node = -1;
+            selected_nodes = []
             const close_recursive = (node: Node) => {
                 node.children.forEach(child => {
                     const physical_node = physical_fs.find(physical_node => physical_node.id == child.id);
@@ -241,6 +283,23 @@
 			if(!this.is_open) this.open()
             else this.close()
 		}
+        move(distance: Vector2){
+            this.position.x += distance.x;
+            this.position.y += distance.y;
+
+            const node: Node | 0 = fs.findChild(this.id);
+            if (typeof node == 'number') return 0;
+            node.children.forEach(child => {
+                const physical_node = physical_fs.find(physical_node => physical_node.id == child.id);
+                if (typeof physical_node !== 'undefined') {
+                    physical_node.move(distance);
+                }
+            });
+        }
+        moveTo(position: Vector2){
+            const distance = {x: position.x - this.position.x, y: position.y - this.position.y};
+            this.move(distance);
+        }
 	}
 
     interface Link{
@@ -251,12 +310,12 @@
 
 	let physical_fs: Array<PhysicalNode> = [];
     let links: Array<Link> = [];
-    let selected_node: number = -1;
+    let selected_nodes: Array<number> = [];
 
 	const init_physical_fs = async () => {
 		physical_fs = [
 			...physical_fs,
-			new PhysicalNode(fs.name, { x: 0, y: 0 }, fs.id),
+			new PhysicalNode(fs.name, 0, { x: 0, y: 0 }, fs.id, 1),
 		];
 	};
 
@@ -281,7 +340,7 @@
                 const dx = node2.position.x - node1.position.x;
                 const dy = node2.position.y - node1.position.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                const minDistance = 175;
+                const minDistance = 150;
 
                 if (distance < minDistance) {
                     const angle = Math.atan2(dy, dx);
@@ -359,13 +418,13 @@
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
 			<div
-				class="node {node.id == selected_node ? 'selected' : ''}"
-				on:click={() => node.click()}
+				class="node {selected_nodes.includes(node.id) ? 'selected' : ''}"
+				on:mousedown={(e) => node.mouseDown(e)}
 				on:dblclick={() => node.doubleClick()}
                 bind:this={node.htmlElement}
                 style="translate({node.position.x}px, {node.position.y}px);"
 			>
-				{node.name}<br />{node.id}
+				{node.name}<br/>{node.id}
 			</div>
 		{/each}
 	</div>
@@ -392,7 +451,8 @@
 	}
 	.node {
 		position: absolute;
-		padding: 30px;
+		padding: 20px;
+        font-size: 15px;
 		border-radius: 100%;
 		background: #222;
 		display: flex;
