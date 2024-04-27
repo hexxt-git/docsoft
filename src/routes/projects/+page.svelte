@@ -1,10 +1,49 @@
 <script>
+	import { json } from "@sveltejs/kit";
+
     let projects = [
         { name: "Project 1" },
         { name: "Project 2" },
         { name: "Project 3" },
         { name: "Project 4" },
     ];
+    if(typeof document != 'undefined') if (!document.cookie.includes('token:')) window.open('/signin', '_self')
+
+    let token = ''
+    const init = async () => {
+        if(typeof window == 'undefined') return;
+        if(!document.cookie.includes('token:')) return;
+        token = (document.cookie.split('; ').find(x=>x.includes('token:'))||'').slice(6)
+
+        let response = await fetch('https://d8a8-129-45-112-40.ngrok-free.app/workspaces/me', {
+            method: 'get',
+            headers: {
+                Authorization: 'token ' + token 
+            }
+
+        })
+
+        console.log(token)
+        console.log(response)
+    }
+
+    const create = async () => {
+        if(typeof window == 'undefined') return;
+        if(!document.cookie.includes('token:')) return;
+
+        let response = fetch('https://d8a8-129-45-112-40.ngrok-free.app/workspaces/create', {
+            method: 'post',
+            headers: {
+                Authorization: 'token ' + token 
+            },
+            body: JSON.stringify({
+                owner_id: ''
+            })
+        })
+
+    }
+
+    init()
 </script>
 
 <main>

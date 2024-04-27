@@ -3,10 +3,10 @@
 
 	export let inspected: any = writable({})
 
-    let fakedata: {type: string, location: string, last_modified: string, size: string, owner: string, group: string, notes: Array<string>};
+    let fakedata: {type: string, location: string, last_modified: string, size: string, owner: string, group: string, notes: string};
 
     let old = ''
-    inspected.subscribe((newf) => {
+    inspected.subscribe((newf: any) => {
         if(newf.name == old) return;
         old = newf.name
         

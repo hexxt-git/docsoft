@@ -1,9 +1,9 @@
 <script>
-    let first_name = '123@123';
-    let last_name = '123@123';
-    let email = '123@123';
-    let company_name = '123@123';
-    let password = '123@123';
+    let first_name = '';
+    let last_name = '';
+    let email = '';
+    let company_name = '';
+    let password = '';
 
     async function signUp() {
         let response;
@@ -45,11 +45,11 @@
         </label>
         <label>
             Email:
-            <input type="email" bind:value={email} required />
+            <input name="email" type="email" bind:value={email} required />
         </label>
         <label>
             Password:
-            <input type="password" bind:value={password} required />
+            <input name="password" type="password" bind:value={password} required />
         </label>
         <button type="submit">Sign Up</button>
     </form>

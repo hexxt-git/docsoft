@@ -148,7 +148,7 @@
 		async rquest_children() {
 			return new Promise((res) =>
 				setTimeout(() => {
-					this.children = new Array(Math.ceil(Math.random() * 5 + 2))
+					this.children = new Array(Math.ceil(Math.random() * 6 + 1))
 						.fill(0)
 						.map(() => {
 							return new Node(
@@ -374,6 +374,7 @@
 		doubleClick() {
 			if (!this.is_open) this.open();
 			else this.close();
+			if(this.image == 'file.svg') window.open('/file_viewer/'+this.id)
 		}
 		move(distance: Vector2) {
 			this.base_position.x += distance.x;
@@ -582,7 +583,8 @@
 				style="translate({node.position.x}px, {node.position.y}px);"
 			>
 				<img draggable="false" src={node.image} alt="" />
-				<div class="node-name">/{node.name}</div>
+				<div class="node-name">
+					{node.image=='file.svg'?'':'/'}{node.name}</div>
 				{#if selected_nodes.includes(node.id)}
 					<div class="highlight"></div>
 				{/if}

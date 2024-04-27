@@ -20,6 +20,7 @@
 				window.open('/projects', '_self')
 			})
 		} catch (err) {
+			alert('conection failed')
 			console.error(err)
 		}
 	}
@@ -30,11 +31,11 @@
 	<form on:submit|preventDefault={signIn}>
 		<label>
 			Email:
-			<input type="email" bind:value={email} required />
+			<input name="email" type="email" bind:value={email} required />
 		</label>
 		<label>
 			Password:
-			<input type="password" bind:value={password} required />
+			<input name="password" type="password" bind:value={password} required />
 		</label>
 		<button type="submit">Sign In</button>
 	</form>
