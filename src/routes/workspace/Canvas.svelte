@@ -1,4 +1,10 @@
 <script lang="ts">
+	import { writable } from "svelte/store";
+	import Inspector from "./Inspector.svelte";
+
+
+	export let inspected = writable({})
+
 	const lerp = (a: number, b: number, t: number) => {
 		t = Math.max(0, Math.min(1, t));
 		return a + (b - a) * (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
@@ -18,6 +24,7 @@
 	let target_translate: Vector2 = { x: 0, y: 0 };
 	let zoom_level = 1; // dont use this
 	let contextMenu: HTMLElement;
+	let selected_nodes: Array<number> = [];
 
 	const click = (e: MouseEvent) => {
 		if (e.target == mainElement || e.target == containerElement) {
@@ -57,7 +64,6 @@
 		if (typeof mainElement == 'undefined') return;
 		if (mainElement == null) return;
 		if (!mainElement.classList.contains('drag')) return;
-
 		mainElement.classList.remove('drag');
 	};
 	if (typeof window != 'undefined') {
@@ -94,12 +100,12 @@
 		current_translate.x = lerp(
 			current_translate.x,
 			target_translate.x,
-			0.2,
+			0.4,
 		);
 		current_translate.y = lerp(
 			current_translate.y,
 			target_translate.y,
-			0.2,
+			0.4,
 		);
 		if (containerElement)
 			containerElement.style.transform = `translate(${current_translate.x}px, ${current_translate.y}px)`;
@@ -111,7 +117,8 @@
 	if (typeof window != 'undefined') {
 		target_translate.x = (window.innerWidth - 400) / 4;
 		target_translate.y = window.innerHeight / 2;
-		current_translate = target_translate;
+		current_translate.x = target_translate.x;
+		current_translate.y = target_translate.y;
 	}
 	container_update();
 
@@ -141,7 +148,7 @@
 		async rquest_children() {
 			return new Promise((res) =>
 				setTimeout(() => {
-					this.children = new Array(Math.ceil(Math.random() * 5))
+					this.children = new Array(Math.ceil(Math.random() * 5 + 2))
 						.fill(0)
 						.map(() => {
 							return new Node(
@@ -155,7 +162,7 @@
 							);
 						});
 					res(1);
-					console.log(...this.children);
+					//console.log(...this.children);
 				}, 500),
 			);
 		}
@@ -199,6 +206,7 @@
 		depth: number;
 		parent: PhysicalNode | undefined;
 		image: string;
+		is_connected: boolean = true;
 		constructor(
 			name: string,
 			direction: number,
@@ -265,9 +273,7 @@
 					(Math.atan2(
 						this.parent.position.y - this.position.y,
 						this.parent.position.x - this.position.x,
-					) *
-						180) /
-						Math.PI;
+					) * 180) / Math.PI;
 		}
 		mouseDown(e: MouseEvent) {
 			if (e.shiftKey) {
@@ -283,15 +289,23 @@
 			}
 		}
 		async open() {
+			if(this.image == 'file.svg') return 0;
 			const node: Node | 0 = fs.findChild(this.id);
 			if (typeof node == 'number') return 0;
 			selected_nodes = [this.id];
 			this.is_open = true;
 			await node.rquest_children();
+			
+			if(typeof window != 'undefined'){
+				target_translate.x = - this.position.x + (window.innerWidth - 400)/2
+				target_translate.y = - this.position.y + window.innerHeight/2
+			}
+			
 			const physical_chilren: Array<PhysicalNode> = node.children.map(
 				(child, index) => {
 					// evenly distrebute from the current direction in a 30deg
-					let area = 60;
+					let area = 90;
+					if(this.depth == 1) area = 360;
 					let spread = area / node.children.length;
 					let child_direction =
 						this.direction + spread * (index + 0.5) - area / 2;
@@ -411,23 +425,6 @@
 				}, 500),
 			);
 		}
-		async transfer(target: number) {
-			return new Promise((res) =>
-				setTimeout(() => {
-					const target_node = physical_fs.find(
-						(node) => node.id == target,
-					);
-					if (typeof target_node == 'undefined') return 0;
-					this.close();
-					target_node.close();
-
-					// await api call
-
-					target_node.open();
-					this.open();
-				}, 500),
-			);
-		}
 	}
 
 	interface Link {
@@ -438,7 +435,6 @@
 
 	let physical_fs: Array<PhysicalNode> = [];
 	let links: Array<Link> = [];
-	let selected_nodes: Array<number> = [];
 
 	const init_physical_fs = async () => {
 		physical_fs = [
@@ -500,6 +496,7 @@
 			});
 		});
 
+		inspected.set(fs?.findChild(selected_nodes[selected_nodes.length-1]) || {})
 		requestAnimationFrame(physics_update);
 	};
 
@@ -593,13 +590,45 @@
 		{/each}
 	</div>
 	<div id="context-menu" bind:this={contextMenu}>
-		<div class="menu-item">hello</div>
-		<div class="menu-item">world</div>
-		<div class="menu-item">this</div>
-		<div class="menu-item">is</div>
-		<div class="menu-item">a</div>
-		<div class="menu-item">context</div>
-		<div class="menu-item">menu</div>
+		<div class="menu-item">
+			copy
+			<span>ctrl + c</span>
+			<hr>
+		</div>
+		<div class="menu-item">
+			paste
+			<span>ctrl + v</span>
+			<hr>
+		</div>
+		<div class="menu-item">
+			cut
+			<span>ctrl + x</span>
+			<hr>
+		</div>
+		<div class="menu-item">
+			rename
+			<span>ctrl + f2</span>
+			<hr>
+		</div>
+		<div class="menu-item">
+			preview
+			<span>ctrl + o</span>
+			<hr>
+		</div>
+		<div class="menu-item">
+			download
+			<span>ctrl + s</span>
+			<hr>
+		</div>
+		<div class="menu-item">
+			share
+			<span>ctrl + a</span>
+			<hr>
+		</div>
+		<div class="menu-item">
+			convert
+			<span>ctrl + t</span>
+		</div>
 	</div>
 </main>
 
@@ -625,9 +654,8 @@
 	}
 	.node {
 		position: absolute;
-		width: 90px;
-		height: 90px;
-		font-size: 15px;
+		width: 80px;
+		height: 80px;
 		border-radius: 100%;
 		background: var(--node-color);
 		box-shadow:
@@ -658,8 +686,8 @@
 		box-shadow: var(--accent) 0 0 10px;
 	}
 	.node img {
-		width: 50px;
-		height: 50px;
+		width: 40px;
+		height: 40px;
 		z-index: 15;
 	}
 	.node-name {
@@ -682,25 +710,53 @@
 		filter: blur(1px);
 	}
 	#context-menu {
-		background-color: #050712;
-		color: white;
+		background-color: #fff;
+		color: black;
 		position: absolute;
 		top: 0;
 		left: 0;
 		display: none;
+		border-radius: 30px;
+		padding: 10px 0;
+		overflow: hidden;
 	}
 	#context-menu .menu-item {
 		padding: 10px;
-		width: 200px;
+		width: 210px;
 		cursor: pointer;
 	}
 	#context-menu .menu-item:hover {
-		background-color: #151922;
+		padding-left: 20px;
+		padding-right: 0;
+		text-decoration: underline;
 	}
 	.menu-item:nth-child(odd) {
-		background-color: #091015;
+		background-color: #fff;
 	}
 	.menu-item:nth-child(even) {
-		background-color: #050712;
+		background-color: #fafafa;
+	}
+	hr{
+		border-style: solid;
+		border-color: #888;
+		border-width: 1px;
+		width: 70%;
+		position: absolute;
+		bottom: 0;		
+		left: 0;
+		right: 0;
+		transform: translateY(11px);
+	}
+	.menu-item{
+		display: flex;
+		justify-content: space-between;
+		position: relative;
+	}
+	.menu-item span{
+		text-decoration: none;
+		position: absolute;
+		right: 10px;
+		color: #888;
+		text-transform: uppercase;
 	}
 </style>

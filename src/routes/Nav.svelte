@@ -1,27 +1,33 @@
 <script>
+    import { page } from '$app/stores';
     export let style = ''
     let query = ''
     const search = (e) => {
         console.log(query)
     }
+    
 </script>
 
 <nav style={style}>
     <a href="/" id="logo">
         <img src="/favicon.png" alt="dock soft logos" />
-        Doc Soft
+        DocSoft
     </a>
-    
+    {#if $page.url.toString().includes('/workspace')}
     <form on:submit|preventDefault={search}>
         <textarea name="search" id="searchbar" placeholder="AI powered search" rows="1" cols="25" bind:value={query}></textarea>
         <button><img src="/search.svg" alt="search" class="icon"></button>
     </form>
+    {/if}
     <div id="links">
+        <a href="/projects">
+            <img src="/settings.svg" alt="settings" class="icon" />
+        </a>
         <a href="/help">
             <img src="/help.svg" alt="help" class="icon" />
         </a>
-        <a href="/settings">
-            <img src="/settings.svg" alt="settings" class="icon" />
+        <a href="/signin">
+            <img src="/profile.svg" alt="profile" class="icon" />
         </a>
     </div>
 </nav>

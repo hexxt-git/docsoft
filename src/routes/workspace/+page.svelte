@@ -1,14 +1,14 @@
-<script lang="ts">
-    import Nav from './Nav.svelte';
+<script>
+	import { writable } from 'svelte/store';
     import Canvas from './Canvas.svelte';
     import Inspector from './Inspector.svelte';
 
+    const inspected = writable({})
 </script>
 
 <main>
-    <Nav />
-    <Canvas />
-    <Inspector />
+    <Canvas {inspected}/>
+    <Inspector {inspected} />
 </main>
 
 <style>
