@@ -13,7 +13,8 @@
         {#each projects as project}
             <div class="card">
                 <h3>{project.name}</h3>
-                click to edit or view this project
+                click to edit or view this Project<br>
+                <a href="/workspace">edit</a> <a href="/workspace">delete</a>
             </div>
         {/each}
     </div>

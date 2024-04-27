@@ -2,7 +2,7 @@
     import { page } from '$app/stores';
     export let style = ''
     let query = ''
-    const search = (e) => {
+    const search = () => {
         console.log(query)
     }
     

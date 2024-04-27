@@ -1,17 +1,30 @@
 <script>
-    let firstName = '';
-    let lastName = '';
-    let email = '';
-    let password = '';
+    let first_name = '123@123';
+    let last_name = '123@123';
+    let email = '123@123';
+    let company_name = '123@123';
+    let password = '123@123';
 
-    function signUp() {
-        // Perform sign-up logic here
-        console.log('Signing up...');
-        console.log('First Name:', firstName);
-        console.log('Last Name:', lastName);
-        console.log('Email:', email);
-        console.log('Password:', password);
-        window.open('/workspace', '_self');
+    async function signUp() {
+        let response;
+        try{
+            response = await fetch('https://d8a8-129-45-112-40.ngrok-free.app/auth/signup/', {
+            method: 'post',
+            body: JSON.stringify({
+                first_name,
+                last_name,
+                email,
+                company_name,
+                password
+            }),
+        })} catch (err) {
+            console.error(err)
+        }
+
+        if(response?.ok) {
+            alert('signup successfull')
+            window.open('/signin', '_self')
+        }
     }
 </script>
 
@@ -20,11 +33,15 @@
     <form on:submit|preventDefault={signUp}>
         <label>
             First Name:
-            <input type="text" bind:value={firstName} required />
+            <input type="text" bind:value={first_name} required />
         </label>
         <label>
             Last Name:
-            <input type="text" bind:value={lastName} required />
+            <input type="text" bind:value={last_name} required />
+        </label>
+        <label>
+            Company Name:
+            <input type="text" bind:value={company_name} required />
         </label>
         <label>
             Email:

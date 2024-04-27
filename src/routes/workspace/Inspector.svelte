@@ -1,34 +1,57 @@
-<script>
+<script lang="ts">
 	import { writable } from "svelte/store";
 
-	export let inspected = writable({})
+	export let inspected: any = writable({})
 
-    
+    let fakedata: {type: string, location: string, last_modified: string, size: string, owner: string, group: string, notes: Array<string>};
+
+    let old = ''
+    inspected.subscribe((newf) => {
+        if(newf.name == old) return;
+        old = newf.name
+        
+        fakedata = {
+            type: ['image/png', 'file/pdf', 'video/mp4', 'video/mkv', 'game/exe'][Math.random()*5|0],
+            location: ['/root/projects', '/root/documents', '/root/files', '/root/images', '/root/videos'][Math.random()*5|0],
+            last_modified: ['10-Aug-2023', '15-Sep-2023', '20-Oct-2023', '25-Nov-2023', '30-Dec-2023'][Math.random()*5|0],
+            size: ['2.75Mb', '1.5Mb', '3.2Mb', '4.8Mb', '5.6Mb'][Math.random()*5|0],
+            owner: ['John', 'Jane', 'Mike', 'Sarah', 'David'][Math.random()*5|0],
+            group: ['Projects', 'Documents', 'Files', 'Images', 'Videos'][Math.random()*5|0],
+            notes: [
+                'This file contains the project plan for Q4.',
+                'This file contains important financial data.',
+                'This file is for internal use only.',
+                'This file contains sensitive information.',
+                'This file is part of the marketing campaign.'
+            ][Math.random()*5|0]
+        };
+    });
 </script>
 
-<nav>
-    <h1>Selected</h1>
-    <h2><span>name:</span> project_plan</h2>
-    <h2><span>type:</span> application/vnd.ms-excel</h2>
-    <h2><span>Location:</span> /root/projects</h2>
-    <h2><span>Last modified:</span> 10-Aug-2023 <span>By:</span> John</h2>
-    <h2><span>size on disc:</span> 2.75Mb</h2>
-    <hr>
-    <h1>File Permissions</h1>
-    <h2><span>Owner:</span> John</h2>
-    <h2><span>Group:</span> Projects</h2>
-    <h2><span>Others:</span> Read</h2>
-    <hr>
-    <h1>Notes</h1>
-    <p>This file contains the project plan for Q4.</p>
-    <hr>
-    <h1>File Actions</h1>
-    <li>download</li>
-    <li>share</li>
-    <li>convert</li>
-    <li>delete</li>
-    <li>rename</li>
-</nav>
+{#if $inspected.name}
+    <nav>
+        <h1>Selected</h1>
+        <h2><span>name:</span> {$inspected.name}</h2>
+        <h2><span>type:</span> application/vnd.ms-excel</h2>
+        <h2><span>Location:</span> /root/projects</h2>
+        <h2><span>size on disc:</span> {fakedata.size}</h2>
+        <hr>
+        <h1>File Permissions</h1>
+        <h2><span>Owner:</span> {fakedata.owner}</h2>
+        <h2><span>Group:</span> {fakedata.group}</h2>
+        <h2><span>Others:</span> Read</h2>
+        <hr>
+        <h1>Notes</h1>
+        <p>{fakedata.notes}</p>
+        <hr>
+        <h1>File Actions</h1>
+        <li>download</li>
+        <li>share</li>
+        <li>convert</li>
+        <li>delete</li>
+        <li>rename</li>
+    </nav>
+{/if}
 
 <style>
     nav{

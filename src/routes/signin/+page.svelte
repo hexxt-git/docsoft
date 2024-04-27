@@ -2,12 +2,26 @@
 	let email = '';
 	let password = '';
 
-	function signIn() {
-		// Perform sign-in logic here
-		console.log('Signing in...');
-		console.log('Email:', email);
-		console.log('Password:', password);
-		window.open('/workspace', '_self');
+	async function signIn() {
+		try{
+			let response = await fetch('https://d8a8-129-45-112-40.ngrok-free.app/auth/login/', {
+				method: 'post',
+				body: JSON.stringify({
+					email,
+					password
+				}),
+			})
+			if(!response.ok){
+				alert('faild to sign in')
+			}
+			response.json().then(data => {
+				document.cookie = 'token:' + data.token + ';'
+				alert('signup successfull')
+				window.open('/projects', '_self')
+			})
+		} catch (err) {
+			console.error(err)
+		}
 	}
 </script>
 

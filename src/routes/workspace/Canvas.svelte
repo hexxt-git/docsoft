@@ -155,7 +155,7 @@
 								['folder.svg', 'file.svg'][
 									Math.floor(Math.random() * 2)
 								],
-								'child',
+								[ 'child', 'parent', 'programming', 'art', 'video games', 'movies', 'work', 'horses', 'dogs', 'houses', 'music', 'sports', 'travel', 'education', 'health', 'fitness', 'technology', 'nature', 'science', 'history','photography', 'cooking', 'literature', 'design', 'fashion', 'business', 'finance', 'politics', 'culture', 'architecture', 'gardening', 'crafts', 'automobiles', 'real estate', 'shopping', 'entertainment', 'news', 'religion', 'philosophy', 'psychology','sociology', 'economics', 'mathematics', 'physics', 'chemistry', 'biology', 'astronomy', 'geography', 'languages', 'coding','web development', 'software engineering', 'data science', 'machine learning', 'artificial intelligence', 'networking', 'cybersecurity','databases', 'cloud computing', 'virtual reality', 'augmented reality', 'blockchain', 'cryptocurrency', 'robotics', 'quantum computing','sustainability', 'environment', 'climate change', 'renewable energy', 'conservation', 'wildlife', 'outdoors', 'camping', 'hiking','yoga', 'meditation', 'mindfulness', 'nutrition', 'weight loss', 'bodybuilding', 'running', 'cycling', 'swimming', 'basketball','soccer', 'baseball', 'football', 'tennis', 'golf', 'skiing', 'surfing', 'rock climbing', 'fishing', 'painting', 'drawing', 'sculpture','pottery', 'photography', 'filmmaking', 'animation', 'graphic design', 'interior design', 'landscape design', 'fashion design', 'jewelry design','knitting', 'sewing', 'quilting', 'scrapbooking', 'woodworking', 'metalworking', 'calligraphy', 'origami', 'magic', 'juggling', 'stand-up comedy'][Math.random()*100|0],
 								Math.trunc(Math.random() * 100000),
 								0,
 								0,
