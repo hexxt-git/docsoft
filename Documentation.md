@@ -1,3 +1,12 @@
+# frontend
+run sveltekit in the main directory using
+```bash
+npm install
+npm run build
+npm run preview
+```
+
+# backend
 
 This document provides an overview of the backend API endpoints and data structures used in the application.
 
